@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+    <title>Telepresence</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="./lib/eventemitter2.min.js"></script>
     <script src="./lib/jquery-2.2.0.min.js"></script>
     <script src="./lib/roslib.min.js"></script>
@@ -9,8 +12,6 @@
         var alpha, valpha, z;
         var beta, vbeta, x;
         var gamma, vgamma, y;
-
-        var imuTimer;
 
         if (window.DeviceOrientationEvent) {
             window.addEventListener('deviceorientation', function(eventData) {
@@ -32,7 +33,7 @@
             z = acceleration.z;
 
             var rotation = eventData.rotationRate;
-            vgamma = rotation.gamma;  
+            vgamma = rotation.gamma;
             vbeta = rotation.beta;
             valpha = rotation.alpha;
         }
@@ -40,100 +41,69 @@
         var ros = new ROSLIB.Ros();
 
         var imuTopic = new ROSLIB.Topic({
-            ros : ros,
-            name : '/cardboard/imu',
-            messageType : 'sensor_msgs/Imu'
+            ros: ros,
+            name: '/cardboard/imu',
+            messageType: 'sensor_msgs/Imu'
         });
-        
-        ros.on('connection', function() { $('#debug_msg').text('Connected');});
-        ros.on('error', function(error) { $('#debug_msg').text('Error: ' + error); });
-        ros.on('close', function() { $('#debug_msg').text('Connection closed');});
+
+        ros.on('connection', function() {
+            $('#debug_msg').text('Connected');
+        });
+        ros.on('error', function(error) {
+            $('#debug_msg').text('Error: ' + error);
+        });
+        ros.on('close', function() {
+            $('#debug_msg').text('Connection closed');
+        });
     </script>
-    <style type="text/css">
-        *{
-            margin: 0;
-            padding: 0;
-        }
-        html, body{
-            width: 100%;
-            height: 100%;
-        }
-        #debug_msg{
-            color: #fff;
-            background-color: rgba(0,0,0,0.4);
-            padding: 0.2em;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        .stream_wrapper{
-            width: 50%;
-            float: left;
-            height: 100%;
-            overflow: hidden;
-        }
-        .stream_wrapper img{
-            min-width: 100%;
-            min-height: 100%;
-            max-width: 110%;
-            max-height: 110%;
-            margin: 0 auto;
-            position: relative;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
 </head>
 
 <body>
-    <div class="stream_wrapper"><img src="http://localhost:8080/stream?topic=/usb_cam/image_raw" /></div>
-    <div class="stream_wrapper"><img src="http://localhost:8080/stream?topic=/usb_cam/image_raw" /></div>
+    <div class="stream_wrapper"><img /></div>
+    <div class="stream_wrapper"><img /></div>
     <div id="debug_msg"></div>
     <script>
-        function imusnapshot() {
-        var beta_radian = ((beta + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
-        var gamma_radian = ((gamma + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
-        var alpha_radian = ((alpha + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
-        var eurlerpose = new THREE.Euler(beta_radian, gamma_radian, alpha_radian);
-        var quaternionpose = new THREE.Quaternion;
-        quaternionpose.setFromEuler(eurlerpose);
+        $(function() {
+            ros.connect("ws://" + window.location.hostname + ":9090");
+            setInterval(function() {
+                var beta_radian = ((beta + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
+                var gamma_radian = ((gamma + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
+                var alpha_radian = ((alpha + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
+                var eurlerpose = new THREE.Euler(beta_radian, gamma_radian, alpha_radian);
+                var quaternionpose = new THREE.Quaternion;
+                quaternionpose.setFromEuler(eurlerpose);
 
-        var imuMessage = new ROSLIB.Message({
-            header : {
-                frame_id : "world"
-            },
-            orientation : {
-                x : quaternionpose.x,
-                y : quaternionpose.y,
-                z : quaternionpose.z,
-                w : quaternionpose.w
-            },
-            orientation_covariance : [0,0,0,0,0,0,0,0,0],
-            angular_velocity : {
-                x : vbeta,
-                y : vgamma,
-                z : valpha,
-            },
-            angular_velocity_covariance  : [0,0,0,0,0,0,0,0,0],
-            linear_acceleration : {
-                x : x,
-                y : y,
-                z : z,
-            },
-            linear_acceleration_covariance  : [0,0,0,0,0,0,0,0,0],
-        });
+                var imuMessage = new ROSLIB.Message({
+                    header: {
+                        frame_id: "world"
+                    },
+                    orientation: {
+                        x: quaternionpose.x,
+                        y: quaternionpose.y,
+                        z: quaternionpose.z,
+                        w: quaternionpose.w
+                    },
+                    orientation_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    angular_velocity: {
+                        x: vbeta,
+                        y: vgamma,
+                        z: valpha,
+                    },
+                    angular_velocity_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    linear_acceleration: {
+                        x: x,
+                        y: y,
+                        z: z,
+                    },
+                    linear_acceleration_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                });
 
-        imuTopic.publish(imuMessage);
-        }
-        $(function(){
-            if(imuTimer == null) {
-                ros.connect("ws://" + window.location.hostname + ":9090");
-                imuTimer = setInterval(function(){
-                    imusnapshot();
-                }, 20);
-            }
+                imuTopic.publish(imuMessage);
+            }, 20);
             $(".stream_wrapper img").attr("src", "http://" + window.location.hostname + ":8080/stream?topic=/usb_cam/image_raw");
         });
     </script>
 </body>
+
 </html>
