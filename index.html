@@ -9,17 +9,10 @@
     <script src="./lib/roslib.min.js"></script>
     <script src="./lib/three.min.js"></script>
     <script>
-        var alpha, valpha, z;
-        var beta, vbeta, x;
-        var gamma, vgamma, y;
+        var valpha, z;
+        var vbeta, x;
+        var vgamma, y;
 
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', function(eventData) {
-                gamma = eventData.gamma;
-                beta = eventData.beta;
-                alpha = eventData.alpha;
-            }, false);
-        };
         if (window.DeviceMotionEvent) {
             window.addEventListener('devicemotion', deviceMotionHandler, false);
         } else {
@@ -33,16 +26,16 @@
             z = acceleration.z;
 
             var rotation = eventData.rotationRate;
-            vgamma = rotation.gamma;
-            vbeta = rotation.beta;
-            valpha = rotation.alpha;
+            vgamma = rotation.gamma / 180.0 * Math.PI;
+            vbeta = rotation.beta / 180.0 * Math.PI;
+            valpha = rotation.alpha / 180.0 * Math.PI;
         }
 
         var ros = new ROSLIB.Ros();
 
         var imuTopic = new ROSLIB.Topic({
             ros: ros,
-            name: '/cardboard/imu',
+            name: '/imu/data_raw',
             messageType: 'sensor_msgs/Imu'
         });
 
@@ -67,22 +60,15 @@
         $(function() {
             ros.connect("ws://" + window.location.hostname + ":9090");
             setInterval(function() {
-                var beta_radian = ((beta + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
-                var gamma_radian = ((gamma + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
-                var alpha_radian = ((alpha + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
-                var eurlerpose = new THREE.Euler(beta_radian, gamma_radian, alpha_radian);
-                var quaternionpose = new THREE.Quaternion;
-                quaternionpose.setFromEuler(eurlerpose);
-
                 var imuMessage = new ROSLIB.Message({
                     header: {
                         frame_id: "world"
                     },
                     orientation: {
-                        x: quaternionpose.x,
-                        y: quaternionpose.y,
-                        z: quaternionpose.z,
-                        w: quaternionpose.w
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                        w: 0
                     },
                     orientation_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
                     angular_velocity: {
