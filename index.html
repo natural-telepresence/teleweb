@@ -6,33 +6,19 @@
     <script src="./lib/roslib.min.js"></script>
     <script src="./lib/three.min.js"></script>
     <script>
-        // these two lines contain the base64-encoded images to turn on- and off the application.
-
         var alpha, valpha, z;
         var beta, vbeta, x;
         var gamma, vgamma, y;
 
         var imuTimer;
 
-        // setup event handler to capture the orientation event and store the most recent data in a variable
-
         if (window.DeviceOrientationEvent) {
-            // Listen for the deviceorientation event and handle the raw data
             window.addEventListener('deviceorientation', function(eventData) {
-                // gamma is the left-to-right tilt in degrees, where right is positive
                 gamma = eventData.gamma;
-
-                // beta is the front-to-back tilt in degrees, where front is positive
                 beta = eventData.beta;
-
-                // alpha is the compass direction the device is facing in degrees
                 alpha = eventData.alpha;
-
             }, false);
         };
-
-        // setup event handler to capture the acceleration event and store the most recent data in a variable
-
         if (window.DeviceMotionEvent) {
             window.addEventListener('devicemotion', deviceMotionHandler, false);
         } else {
@@ -40,38 +26,69 @@
         }
 
         function deviceMotionHandler(eventData) {
-            // Grab the acceleration from the results
             var acceleration = eventData.acceleration;
             x = acceleration.x;
             y = acceleration.y;
             z = acceleration.z;
 
-            // Grab the rotation rate from the results
             var rotation = eventData.rotationRate;
             vgamma = rotation.gamma;  
             vbeta = rotation.beta;
             valpha = rotation.alpha;
         }
 
-
-        // setup connection to the ROS server and prepare the topic
         var ros = new ROSLIB.Ros();
-
-        ros.on('connection', function() { console.log('Connected to websocket server.');});
-
-        ros.on('error', function(error) { console.log('Error connecting to websocket server: ', error); window.alert('Error connecting to websocket server'); });
-
-        ros.on('close', function() { console.log('Connection to websocket server closed.');});
 
         var imuTopic = new ROSLIB.Topic({
             ros : ros,
             name : '/cardboard/imu',
             messageType : 'sensor_msgs/Imu'
         });
+        
+        ros.on('connection', function() { $('#debug_msg').text('Connected');});
+        ros.on('error', function(error) { $('#debug_msg').text('Error: ' + error); });
+        ros.on('close', function() { $('#debug_msg').text('Connection closed');});
     </script>
+    <style type="text/css">
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        html, body{
+            width: 100%;
+            height: 100%;
+        }
+        #debug_msg{
+            color: #fff;
+            background-color: rgba(0,0,0,0.4);
+            padding: 0.2em;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .stream_wrapper{
+            width: 50%;
+            float: left;
+            height: 100%;
+            overflow: hidden;
+        }
+        .stream_wrapper img{
+            min-width: 100%;
+            min-height: 100%;
+            max-width: 110%;
+            max-height: 110%;
+            margin: 0 auto;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+    </style>
 </head>
 
 <body>
+    <div class="stream_wrapper"><img src="http://localhost:8080/stream?topic=/usb_cam/image_raw" /></div>
+    <div class="stream_wrapper"><img src="http://localhost:8080/stream?topic=/usb_cam/image_raw" /></div>
+    <div id="debug_msg"></div>
     <script>
         function imusnapshot() {
         var beta_radian = ((beta + 360) / 360 * 2 * Math.PI) % (2 * Math.PI);
@@ -114,7 +131,8 @@
                 imuTimer = setInterval(function(){
                     imusnapshot();
                 }, 20);
-            } 
+            }
+            $(".stream_wrapper img").attr("src", "http://" + window.location.hostname + ":8080/stream?topic=/usb_cam/image_raw");
         });
     </script>
 </body>
