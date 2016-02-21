@@ -26,9 +26,9 @@
             z = acceleration.z;
 
             var rotation = eventData.rotationRate;
-            vgamma = rotation.gamma / 180.0 * Math.PI;
-            vbeta = rotation.beta / 180.0 * Math.PI;
-            valpha = rotation.alpha / 180.0 * Math.PI;
+            vgamma = rotation.gamma;
+            vbeta = rotation.beta ;
+            valpha = rotation.alpha;
         }
 
         var ros = new ROSLIB.Ros();
@@ -86,7 +86,7 @@
                     linear_acceleration_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
                 });
 
-                if(start_counter > 5){
+                if(start_counter > 50){
                     imuTopic.publish(imuMessage);
                 } else {
                     start_counter++;
