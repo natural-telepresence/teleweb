@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html> 
+<head>
+    <title>Telepresence</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="./lib/eventemitter2.min.js"></script>
+    <script src="./lib/jquery-2.2.0.min.js"></script>
+    <script src="./lib/roslib.min.js"></script>
+    <script type='text/javascript'>
+        var joystickTimeout;
+
+        $(document).ready(function(){
+            $('.joystick_handle').on('touchstart mousedown', function(){
+                $(this).parents('.joystick_wrapper').addClass('joystick_dragging');
+            });
+
+            $('.joystick_wrapper').on('touchend mouseup mouseleave', function(){
+                resetJoystickTimeout();
+                var wrapper = $(this);
+                wrapper.removeClass('joystick_dragging');
+                var joystick = $(this).find('.joystick_handle');
+                if(wrapper.is('.joystick_disabled')){
+                    joystick.css('left', '-50%');
+
+                } else {
+                    joystick.css('left', 0);
+
+                }
+                joystick.css('top', 0);
+            });
+            $('.joystick_wrapper').on('mousemove touchmove', function(event) {
+                var wrapper = $(this);      
+                if(!wrapper.is('.joystick_dragging')){
+                    return;
+                }
+                resetJoystickTimeout();
+                var wrapperOffset = wrapper.offset();
+                var centerX = wrapperOffset.left + wrapper.width() / 2;
+                var centerY = wrapperOffset.top + wrapper.height() / 2;
+                if(event.pageX == undefined){
+                    var touch = event.originalEvent.touches[0];
+                    var joyX = touch.pageX - centerX;
+                    var joyY = touch.pageY - centerY;
+                } else {
+                    var joyX = event.pageX - centerX;
+                    var joyY = event.pageY - centerY;
+                }
+                var joystick = $(this).find('.joystick_handle');
+                //constrain the joystick's movements
+                var distance = Math.sqrt(Math.pow(joyX, 2) + Math.pow(joyY, 2));
+                var maxDistance = wrapper.width() / 2 - joystick.width() / 2;
+                if(distance > maxDistance){
+                    var theta = Math.atan2(joyY, joyX);
+                    joyX = maxDistance * Math.cos(theta);
+                    joyY = maxDistance * Math.sin(theta);
+                }
+                if(!wrapper.is('.joystick_disabled')){
+                    joystick.css('top', joyY);
+                } else if(joyX >= 0) {
+                    joyX = 0;
+                    setTimeout(function(){
+                        wrapper.removeClass('joystick_dragging');
+                        wrapper.removeClass('joystick_disabled');
+                        joystick.css('left', 0);
+                        joystick.css('top', 0);
+                    },100);
+                }
+                joystick.css('left', joyX);
+            });
+        });
+
+        function resetJoystickTimeout(){
+            if(joystickTimeout){
+                clearTimeout(joystickTimeout);
+            }
+            joystickTimeout = setTimeout(function(){
+                if($('.joystick_wrapper').is('.joystick_dragging')){
+                    resetJoystickTimeout();
+                    return;
+                }
+                $('.joystick_wrapper').addClass('joystick_disabled');
+                var joystick = $('.joystick_handle');
+                joystick.css('left', '-50%');
+                joystick.css('top', 0);
+            }, 2500);
+        }
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <link rel="stylesheet" type="text/css" href="./joystick.css" />
+</head>
+
+<body>
+    <div id="debug_msg"></div>
+    <div class="vc">
+        <div class="joystick_wrapper joystick_disabled">
+            <div class="joystick_spacer">
+                <div class="joystick_indicator"></div>
+                <div class="joystick_handle"></div>
+            </div>
+
+            <div class="joystick_label joystick_label_top">F</div>
+            <div class="joystick_label joystick_label_bottom">B</div>
+            <div class="joystick_label joystick_label_left">L</div>
+            <div class="joystick_label joystick_label_right">R</div>
+        </div>
+    </div>
+    <script>
+        var ros = new ROSLIB.Ros();
+
+        ros.on('connection', function() {
+            $('#debug_msg').text('Connected');
+        });
+        ros.on('error', function(error) {
+            $('#debug_msg').text('Error: ' + error);
+        });
+        ros.on('close', function() {
+            $('#debug_msg').text('Connection closed');
+        });
+
+        var cmdTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: '/base/cmd_vel',
+            messageType: 'geometry_msgs/Twist'
+        });
+        $(function() {
+            ros.connect('ws://' + window.location.hostname + ':9090');
+            setInterval(function() {
+                if(!$('.joystick_disabled').length){
+                    var total_height = $('.joystick_wrapper').height();
+                    var handle_height = $('.joystick_handle').height();
+                    var x = parseInt($('.joystick_handle').css('left'));
+                    var y = parseInt($('.joystick_handle').css('top'));
+
+                    var effective_height = total_height - handle_height;
+
+                    var linear_vel = -(y / (effective_height / 2));
+                    var angular_vel  = -(x / (effective_height / 2));
+                    
+                    var twistMessage = new ROSLIB.Message({
+                        linear: {x: linear_vel, y: 0, z: 0},
+                        angular: {x: 0, y: 0, z: angular_vel}
+                    });
+
+                    cmdTopic.publish(twistMessage);
+                }
+            }, 50);
+        });
+    </script>
+</body>
+
+</html>

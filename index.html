@@ -16,7 +16,7 @@
         if (window.DeviceMotionEvent) {
             window.addEventListener('devicemotion', deviceMotionHandler, false);
         } else {
-            window.alert("acceleration measurements Not supported.");
+            window.alert("DeviceMotionEvent unsupported");
         }
 
         function deviceMotionHandler(eventData) {
@@ -58,11 +58,11 @@
     <div id="debug_msg"></div>
     <script>
         $(function() {
-            ros.connect("ws://" + window.location.hostname + ":9090");
+            ros.connect('ws://' + window.location.hostname + ':9090');
             setInterval(function() {
                 var imuMessage = new ROSLIB.Message({
                     header: {
-                        frame_id: "world"
+                        frame_id: 'world'
                     },
                     orientation: {
                         x: 0,
@@ -87,7 +87,7 @@
 
                 imuTopic.publish(imuMessage);
             }, 20);
-            $(".stream_wrapper img").attr("src", "http://" + window.location.hostname + ":8080/stream?topic=/usb_cam/image_raw");
+            $('.stream_wrapper img').attr('src', 'http://' + window.location.hostname + ':8080/stream?topic=/usb_cam/image_raw');
         });
     </script>
 </body>

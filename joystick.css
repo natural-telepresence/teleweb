@@ -1,0 +1,144 @@
+*{
+    box-sizing: content-box;
+}
+
+body{
+    background-color: #f70;
+}
+
+.vc{
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.joystick_wrapper *{
+    transition: all 0.3s linear;
+    -webkit-transition: all 0.3s linear;
+}
+
+.joystick_wrapper{
+    overflow: hidden;
+    width: 30em;
+    height: 30em;
+    background-color: #fff;
+    border-radius: 50%;
+    position: relative;
+    margin: 0 auto;
+}
+
+.joystick_spacer{
+    margin-top: 50%;
+    margin-left: 50%;
+    position: relative;
+}
+
+.joystick_handle{
+    width: 15em;
+    height: 15em;
+    margin-left: -7.5em;
+    margin-top: -7.5em;
+    left: 0;
+    top: 0;
+    background-color: #fff;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 2;
+    transition-duration: 0.3s;
+}
+.joystick_disabled .joystick_handle{
+    border: 0.25em solid #f70;
+    width: 14.5em;
+    height: 14.5em;
+}
+
+.joystick_disabled .joystick_handle{
+    left: -50%;
+}
+
+.joystick_dragging .joystick_handle{
+    transition-duration: 0s;
+}
+
+.joystick_handle:active{
+    background-color: #fff;
+}
+
+.joystick_dragging{
+    cursor: none;
+    top: 0;
+}
+
+.joystick_indicator{
+    width: 20em;
+    height: 20em;
+    margin-left: -10em;
+    margin-top: -10em;
+    background-color: #f70;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 1;
+    left: 0;
+}
+
+.joystick_disabled .joystick_indicator{
+    background-color: #f70;
+    height: 15em;
+    width: 22.5em;
+    margin-top: -7.5em;
+    left: -5em;
+    border-radius: 7.5em;
+}
+
+.joystick_label{
+    font-family: sans-serif;
+    color: #f70;
+    line-height: 0;
+    font-size: 3em;
+    position: absolute;
+    width: 100%;
+    z-index: 3;
+    text-align: center;
+    -webkit-user-select: none;
+}
+.joystick_disabled .joystick_label{
+    z-index: 0;
+}
+
+.joystick_label_top{
+    top: 8%;
+}
+
+.joystick_label_bottom{
+    bottom: 8%;
+}
+
+.joystick_label_left{
+    right: 42%;
+    top: 50%;
+}
+
+.joystick_label_right{
+    left: 42%;
+    top: 50%;
+}
+
+.joystick_disabled .joystick_label{
+    color: #fff;
+}
+
+.joystick_disabled .joystick_label_top{
+    top: 30%;
+}
+
+.joystick_disabled .joystick_label_bottom{
+    bottom: 30%;
+}
+
+.joystick_disabled .joystick_label_left{
+    right: 20%;
+}
+
+.joystick_disabled .joystick_label_right{
+    left: 20%;
+}
