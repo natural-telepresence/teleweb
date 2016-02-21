@@ -57,6 +57,7 @@
     <div class="stream_wrapper"><img /></div>
     <div id="debug_msg"></div>
     <script>
+        var start_counter = 0;
         $(function() {
             ros.connect('ws://' + window.location.hostname + ':9090');
             setInterval(function() {
@@ -85,7 +86,11 @@
                     linear_acceleration_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
                 });
 
-                imuTopic.publish(imuMessage);
+                if(start_counter > 5){
+                    imuTopic.publish(imuMessage);
+                } else {
+                    start_counter++;
+                }
             }, 20);
             $('.stream_wrapper img').attr('src', 'http://' + window.location.hostname + ':8080/stream?topic=/usb_cam/image_raw');
         });
