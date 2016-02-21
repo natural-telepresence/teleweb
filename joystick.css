@@ -7,9 +7,24 @@ body{
 }
 
 .vc{
+    text-align: center;
     position: relative;
     top: 50%;
     transform: translateY(-50%);
+}
+
+button{
+    background-color: #fff;
+    color: #f70;
+    padding: 1em;
+    margin-top: 2em;
+    border: 0;
+}
+button:hover{
+    opacity: 0.8;
+}
+button:focus{
+    opacity: 0.9;
 }
 
 .joystick_wrapper *{

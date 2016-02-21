@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html> 
+<html>
 <head>
     <title>NT - Teleop Joystick</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -29,7 +29,7 @@
                 joystick.css('top', 0);
             });
             $('.joystick_wrapper').on('mousemove touchmove', function(event) {
-                var wrapper = $(this);      
+                var wrapper = $(this);
                 if(!wrapper.is('.joystick_dragging')){
                     return;
                 }
@@ -104,6 +104,11 @@
             <div class="joystick_label joystick_label_left">L</div>
             <div class="joystick_label joystick_label_right">R</div>
         </div>
+
+        <button id="run_calib">
+            Set Zero
+        </button>
+
     </div>
     <script>
         var ros = new ROSLIB.Ros();
@@ -118,11 +123,28 @@
             $('#debug_msg').text('Connection closed');
         });
 
+        var calibrate = new ROSLIB.Service({
+            ros : ros,
+            name : '/imu/calibrate',
+            serviceType : 'std_srvs/Trigger'
+        });
+
+        var request = new ROSLIB.ServiceRequest();
+
         var cmdTopic = new ROSLIB.Topic({
             ros: ros,
             name: '/base/cmd_vel',
             messageType: 'geometry_msgs/Twist'
         });
+
+        $("#run_calib").click(function() {
+            console.log('Clicked');
+            calibrate.callService(request, function() {
+                console.log('Called');
+            });
+        });
+
+
         $(function() {
             ros.connect('ws://' + window.location.hostname + ':9090');
             setInterval(function() {
@@ -136,7 +158,7 @@
 
                     var linear_vel = -(y / (effective_height / 2));
                     var angular_vel  = -(x / (effective_height / 2));
-                    
+
                     var twistMessage = new ROSLIB.Message({
                         linear: {x: linear_vel, y: 0, z: 0},
                         angular: {x: 0, y: 0, z: angular_vel}
